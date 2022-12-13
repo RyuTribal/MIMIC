@@ -9,10 +9,6 @@ import com.aldebaran.qi.sdk.builder.SayBuilder;
 import com.aldebaran.qi.sdk.object.conversation.Say;
 import com.aldebaran.qi.sdk.design.activity.RobotActivity;
 
-
-
-
-
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
