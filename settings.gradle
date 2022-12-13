@@ -10,6 +10,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            url 'https://qisdk.softbankrobotics.com/sdk/maven/'
+        }
     }
 }
 rootProject.name = "MIMIC"
