@@ -8,7 +8,9 @@ public class ActionBuilder {
     public ActionBuilder is_async(boolean value) { this.actionIsAsync = value; return this; }
     public ActionBuilder animation_name(String value) { this.actionAnimationName = value; return this; }
 
+    /*
     public Action build() {
         return new Action(actionAnimationName);
     }
+    */
 }

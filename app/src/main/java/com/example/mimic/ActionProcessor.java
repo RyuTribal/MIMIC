@@ -51,9 +51,15 @@ public class ActionProcessor {
     }
 
     public void executeQueue(boolean asAsync) {
+        // This execution requires some object *like* the robot context to actually execute on, keep this internally in the action processor in that case.
         for (Action action :
                 this.queued_actions) {
-            action.execute(asAsync);
+
+            try {
+                action.execute(asAsync);
+            } catch (MIMICError e) {
+                System.out.println(e.toString());
+            }
         }
     }
 }
