@@ -1,8 +1,8 @@
 package com.example.mimic;
 
-import android.view.animation.Animation;
 
 import com.aldebaran.qi.sdk.QiContext;
+import com.aldebaran.qi.sdk.object.actuation.Animation;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -14,6 +14,9 @@ import java.util.HashMap;
 public class ActionProcessor {
     // Since we only need one actionprocessor throughout the entire application (i think)
     // maybe make this static or use singleton.
+
+    private static ActionProcessor instance = null;
+
 
 
     // The queued actions to use for the next run.
@@ -58,6 +61,20 @@ public class ActionProcessor {
         }
 
         return null;
+    }
+
+    public Animation getAnimation(String name) {
+        return this.animations.get(name);
+    }
+
+    public static ActionProcessor getInstance() {
+        // Should "panic" or throw a exception if there is no instance but
+        // there basically is NEVER not a instance so...
+
+        if (instance == null)
+            System.out.println("Youre gonna have a bad time!");
+
+        return instance;
     }
 
     public void executeQueue(boolean asAsync) {
