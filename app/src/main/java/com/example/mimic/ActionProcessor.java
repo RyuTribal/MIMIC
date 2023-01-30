@@ -2,6 +2,8 @@ package com.example.mimic;
 
 import android.view.animation.Animation;
 
+import com.aldebaran.qi.sdk.QiContext;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +12,10 @@ import java.util.HashMap;
 // Since using animations needs the specific files it makes sense to convert the `Action` into a
 // pepper friendly executable object
 public class ActionProcessor {
+    // Since we only need one actionprocessor throughout the entire application (i think)
+    // maybe make this static or use singleton.
+
+
     // The queued actions to use for the next run.
     private ArrayList<Action> queued_actions = new ArrayList<Action>();
 
@@ -17,7 +23,11 @@ public class ActionProcessor {
     // The available, loaded animations.
     private HashMap<String, Animation> animations = new HashMap<String, Animation>();
 
-    public ActionProcessor() {}
+    private QiContext ctx;
+
+    public ActionProcessor(QiContext ctx) {
+        this.ctx = ctx;
+    }
 
     // Adds a action to be executed later
     public void queueAction(Action action) {
@@ -29,7 +39,7 @@ public class ActionProcessor {
      * Makes the Animation available for use.
      *
      * @param animationName The name of the animation
-     * @param animation The animation object itself
+     * @param animation     The animation object itself
      */
     public void add_animation(String animationName, Animation animation) {
         animations.put(animationName, animation);
@@ -56,9 +66,9 @@ public class ActionProcessor {
                 this.queued_actions) {
 
             try {
-                action.execute(asAsync);
+                action.execute(asAsync, this.ctx);
             } catch (MIMICError e) {
-                System.out.println(e.toString());
+                System.out.println(e);
             }
         }
     }

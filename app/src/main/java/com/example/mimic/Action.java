@@ -22,6 +22,7 @@ public abstract class Action {
     public Action(String animationName) {
         this.animationName = animationName;
     }
+
     public abstract void execute(boolean as_async, QiContext ctx) throws MIMICError;
 
     /*
