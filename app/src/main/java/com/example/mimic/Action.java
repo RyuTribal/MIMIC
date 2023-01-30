@@ -1,6 +1,8 @@
 package com.example.mimic;
 
 
+import com.aldebaran.qi.sdk.QiContext;
+
 // All other types of actions should inherit from this abstract class, this means that
 // a lot of different actions can be abstracted over through the same method (`Action.execute()`)
 // probably. This makes it easy to use actions as new actions can be built using a /ver/ generic
@@ -20,7 +22,7 @@ public abstract class Action {
     public Action(String animationName) {
         this.animationName = animationName;
     }
-    public abstract void execute(boolean as_async) throws MIMICError;
+    public abstract void execute(boolean as_async, QiContext ctx) throws MIMICError;
 
     /*
     public void execute(boolean as_async) throws MIMICError {
