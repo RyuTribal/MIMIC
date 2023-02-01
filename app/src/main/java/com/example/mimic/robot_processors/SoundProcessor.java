@@ -1,4 +1,4 @@
-package com.example.mimic.RobotProcessors;
+package com.example.mimic.robot_processors;
 
 public class SoundProcessor {
     SoundProcessor(){
