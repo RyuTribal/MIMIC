@@ -26,13 +26,13 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     @Override
     public void onRobotFocusGained(QiContext qiContext) {
-        // The robot focus is gained.
-        Say say = SayBuilder.with(qiContext) // Create the builder with the context.
-                .withText("Stop stealing code Oscar!") // Set the text to say.
-                .build(); // Build the say action.
-
-        // Execute the action.
-        say.run();
+        ActionBuilder ab = new ActionBuilder();
+        ActionProcessor ap = new ActionProcessor(qiContext);
+        MIMICSay ms = new MIMICSay("wow cool");
+        MIMICSay ms2 = new MIMICSay("wowzers");
+        ap.queueAction(ms);
+        ap.queueAction(ms2);
+        ap.executeQueue(true);
     }
 
     @Override

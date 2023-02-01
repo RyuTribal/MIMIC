@@ -7,8 +7,9 @@ import com.aldebaran.qi.sdk.object.conversation.Say;
 public class MIMICSay extends Action {
     String to_say;
 
-    public MIMICSay(String animationName, String to_say) {
-        super(animationName);
+    public MIMICSay(String to_say) {
+        // Saying something shouldnt require a animation name.
+        super(null);
 
         this.to_say = to_say;
     }

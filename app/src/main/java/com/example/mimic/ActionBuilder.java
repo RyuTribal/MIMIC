@@ -4,6 +4,7 @@ package com.example.mimic;
 public class ActionBuilder {
     private String actionAnimationName;
     private boolean actionIsAsync;
+    private String actionName;
 
     /**
      * @param value whether to use async
@@ -11,6 +12,11 @@ public class ActionBuilder {
      */
     public ActionBuilder is_async(boolean value) {
         this.actionIsAsync = value;
+        return this;
+    }
+
+    public ActionBuilder action_name(String value) {
+        this.actionName = value;
         return this;
     }
 
@@ -25,7 +31,11 @@ public class ActionBuilder {
 
     /*
     public Action build() {
-        return new Action(actionAnimationName);
+        if (this.actionName.equals("say")) {
+            return MIMICSay(this.ac)
+        } else if (this.actionName.equals("animate")) {
+
+        }
     }
-    */
+     */
 }
