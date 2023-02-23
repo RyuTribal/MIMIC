@@ -1,7 +1,7 @@
 """
 This file contains everything about 
 communication with the open ai
-api.
+api and other network related stuff
 """
 
 
