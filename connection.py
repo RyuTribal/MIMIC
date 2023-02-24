@@ -1,13 +1,14 @@
 
 import qi
 import sys
+import os
 
 class Connection():
     def __init__(self):
-        self.ip = "130.240.114.12"
-        self.port = 9559
-        self.user = "nao"
-        self.pword = "PeppKs2mpH2Al!"
+        self.ip = os.getenv("PEPPER_IP")
+        self.port = os.getenv("PEPPER_PORT")
+        self.user = os.getenv("PEPPER_USER")
+        self.pword = os.getenv("PEPPER_PASSWORD")
         self.services = {}
 
         self.session = qi.Session()

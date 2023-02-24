@@ -7,9 +7,7 @@ def load_env():
         key_and_value = line.split('=')
         os.environ[key_and_value[0]] = key_and_value[1].replace("\n", "")
 
+if __name__ == "__main__":
+    load_env()
 
-load_env()
-
-import network
-
-print(network.send_and_recieve_response("Hello mate!").json())
+    import network
