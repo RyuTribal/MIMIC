@@ -6,8 +6,8 @@ api and other network related stuff
 
 
 import os
-import json
 import requests
+import json
 
 
 URL = "https://api.openai.com/v1/completions"
@@ -25,11 +25,6 @@ def send_and_recieve_response(prompt):
     data = {"model": "text-davinci-003", "temperature": 0, "max_tokens": 150, "prompt": ""}
     data["prompt"] = prompt
 
-    print("Sending to OpenAI with these parameters")
-    print(data)
-    print("And these headders")
-    print(HEADERS)
-
-    response = requests.post(URL, headers=HEADERS, json=data)
+    response = requests.post(URL, data=json.dumps(data), headers=HEADERS, verify=False)
     return response
     
