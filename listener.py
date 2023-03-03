@@ -12,12 +12,14 @@ import speech_recognition
 from naoqi import ALModule, ALProxy
 import wave
 import network
+import threading
+import actions
 
 
 tmp_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tmp_files")
 if not os.path.exists(tmp_path):
     os.makedirs(tmp_path)
-    print("Created temporary folder Pepper_Controller/pepper/tmp_files/ for retrieved data")
+    print("Created temporary folder MIMIC/tmp_files/ for retrieved data")
 
 
 
@@ -44,9 +46,12 @@ class Listener():
         self.speech_recognition_engine.pause(True)
         self.speech_recognition_engine.setLanguage("English")
 
-        vocab = ["no", "yes"]
-
-        self.speech_recognition_engine.setVocabulary(vocab, False)
+        # Not really necessary to put any words in here, this is just to make
+        # the speech recongnition engine work. We use it only for the speech detection
+        # We could force it to listen to a phrase before it starts listening
+        # kind of like alexa.
+        vocab = ["yes", "no"]
+        self.speech_recognition_engine.setVocabulary(vocab, True)
         self.framesCount=0
         self.recording_in_progress = False
 
@@ -57,19 +62,42 @@ class Listener():
     
 
     def listen(self):
-        self.set_awareness(False)
+        while True:
+            print(self.memory_service.getData("ALSpeechRecognition/Status"))
+            if self.recording_in_progress:
+                continue
+            elif self.memory_service.getData("ALSpeechRecognition/Status") != "SpeechDetected":
+                continue
+            self.audio_recorder.stopMicrophonesRecording()
+            self.set_awareness(False)
+            print("[INFO]: Robot is listening to you")
+            if(self.memory_service.getData("ALSpeechRecognition/Status") != "SpeechDetected"):
+                self.set_awareness(True)
+                continue
+            self.tts.say("Yes?")
+            self.recording_in_progress = True
+            self.audio_recorder.startMicrophonesRecording("/home/nao/speech.wav", "wav", 48000, (0, 0, 1, 0))
+            #self.blink_eyes([255, 255, 0])
+            while True:
+                time.sleep(1)
+                if self.memory_service.getData("ALSpeechRecognition/Status") != "SpeechDetected":
+                    time.sleep(0.5)
+                    if self.memory_service.getData("ALSpeechRecognition/Status") != "SpeechDetected":
+                        break
 
-        self.audio_recorder.startMicrophonesRecording("/home/nao/speech.wav", "wav", 48000, (0, 0, 1, 0))
-        self.blink_eyes([255, 255, 0])
-        print("[INFO]: Robot is listening to you")
-        while self.memory_service.getData("ALSpeechRecognition/Status") == "SpeechDetected":
+            self.audio_recorder.stopMicrophonesRecording()
+            self.set_awareness(True)
+
+            self.download_audio("speech.wav")
+            prompt = self.speech_to_text(audio_file="speech.wav")
+            if prompt:
+                print("[INFO]: Heard " + prompt)
+                action_obj = actions.ActionProcessor(conn_obj=self.conn, prompt=prompt)
+                action_obj.process_action()
+            self.recording_in_progress = False
             time.sleep(1)
+            
 
-        self.audio_recorder.stopMicrophonesRecording()
-        self.set_awareness(True)
-
-        self.download_audio("speech.wav")
-        return self.speech_to_text("speech.wav")
         
 
     def download_audio(self, file_name):
@@ -102,11 +130,15 @@ class Listener():
         :return: Text of the speech
         :rtype: string
         """
-        audio_file = speech_recognition.AudioFile(os.path.join(tmp_path, audio_file))
-        with audio_file as source:
-            audio = self.recognizer.record(source)
-            recognized = self.recognizer.recognize_google(audio, language=lang)
-        return recognized
+        audio_source = speech_recognition.AudioFile(os.path.join(tmp_path, audio_file))
+        try:
+            with audio_source as source:
+                audio = self.recognizer.record(source)
+                recognized = self.recognizer.recognize_google(audio, language=lang)
+            return recognized
+        except speech_recognition.UnknownValueError:
+            return None
+        
 
         
 
@@ -124,15 +156,8 @@ class Listener():
     def start_recognition(self):
         self.speech_recognition_engine.pause(False)
         self.speech_recognition_engine.subscribe(self.name)
-        prompt = None
         try:
-            while True:
-                print(self.memory_service.getData("ALSpeechRecognition/Status"))
-                if self.memory_service.getData("ALSpeechRecognition/Status") == "SpeechDetected":
-                    prompt = self.listen()
-                    if prompt:
-                        gpt_resp = network.send_and_recieve_response(prompt)
-                        self.tts.say(gpt_resp.json()["choices"][0]["text"])
+            self.listen()
         except KeyboardInterrupt:
             self.stop_recognition()
 
