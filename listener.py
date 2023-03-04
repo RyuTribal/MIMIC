@@ -19,6 +19,7 @@ import random
 import logging
 
 
+
 tmp_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tmp_files")
 if not os.path.exists(tmp_path):
     os.makedirs(tmp_path)
@@ -57,7 +58,7 @@ class Listener():
         # the speech recongnition engine work. We use it only for the speech detection
         # We could force it to listen to a phrase before it starts listening
         # kind of like alexa.
-        vocab = ["pepper", "stop", "shut up", "cancel", "haram"]
+        vocab = ["pepper", "hey pepper", "stop", "shut up", "cancel", "haram"]
         self.speech_recognition_engine.setVocabulary(vocab, True)
         self.framesCount=0
         self.recording_in_progress = False
@@ -73,11 +74,17 @@ class Listener():
         while True:
             if(self.memory_service.getData("ALSpeechRecognition/Status") == "SpeechDetected"):
                 spotted_word_arr = self.memory_service.getData("WordRecognized")
-                if(spotted_word_arr[-1] > 0.4):
+                if(spotted_word_arr[-1] > 0.5):
                     if 'pepper' in spotted_word_arr[0] and talking_ev.is_set() == False and self.memory_service.getData("ALTextToSpeech/TextStarted") != 1:
+                        print("[WAITING THREAD]: Spotted the word Pepper")
                         talking_ev.set()
                         recording_thread = threading.Thread(target=self.start_recording, args=(talking_ev,))
                         recording_thread.start()
+                    elif "stop" in spotted_word_arr[0] or "shut up" in spotted_word_arr[0] or "cancel" in spotted_word_arr[0] or "haram" in spotted_word_arr[0]:
+                        print("[WAITING THREAD]: Stopping all actions")
+                        self.tts.stopAll()
+                        self.memory_service.insertData("ALTextToSpeech/TextStarted", 0)
+                        talking_ev.clear()
                 
 
     def start_recording(self, talking_ev):
@@ -99,39 +106,6 @@ class Listener():
             action_obj.process_action(talking_ev=talking_ev)
         except:
             talking_ev.clear()
-
-
-    def listen(self):
-        while True:
-            print(self.memory_service.getData("ALSpeechRecognition/Status"))
-            if self.recording_in_progress:
-                continue
-            elif self.memory_service.getData("ALSpeechRecognition/Status") != "SpeechDetected":
-                continue
-            self.audio_recorder.stopMicrophonesRecording()
-            self.set_awareness(False)
-            print("[INFO]: Robot is listening to you")
-            if(self.memory_service.getData("ALSpeechRecognition/Status") != "SpeechDetected"):
-                self.set_awareness(True)
-                continue
-            self.tts.say("Yes?")
-            self.recording_in_progress = True
-            self.audio_recorder.startMicrophonesRecording("/home/nao/speech.wav", "wav", 48000, (0, 0, 1, 0))
-            #self.blink_eyes([255, 255, 0])
-            while True:
-                time.sleep(1)
-                if self.memory_service.getData("ALSpeechRecognition/Status") != "SpeechDetected":
-                    time.sleep(0.5)
-                    if self.memory_service.getData("ALSpeechRecognition/Status") != "SpeechDetected":
-                        break
-
-            self.audio_recorder.stopMicrophonesRecording()
-            self.set_awareness(True)
-
-            self.download_audio("speech.wav")
-            action_obj = actions.ActionProcessor(conn_obj=self.conn, audio_file_path=os.path.join(tmp_path, "speech.wav"))
-            action_obj.process_action()
-            time.sleep(1)
             
 
         
@@ -192,6 +166,7 @@ class Listener():
     def start_recognition(self):
         self.speech_recognition_engine.pause(False)
         self.speech_recognition_engine.subscribe(self.name)
+        self.memory_service.insertData("ALTextToSpeech/TextStarted", 0)
         try:
             self.wait_and_listen()
         except KeyboardInterrupt:

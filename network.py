@@ -43,11 +43,6 @@ def send_openai_recieve_response(prompt):
     openai api and recieves the response.
     """
 
-
-    
-
-
-
     data = {"model": "text-davinci-003", "temperature": 0.9, "max_tokens": 150, "prompt": ""}
     data["prompt"] = "Person:"+prompt+"\nPepper:"
 
@@ -85,9 +80,8 @@ def send_dialogflow_audio_recieve_response(audio_path):
             "Authorization": "Bearer "+creds.token
         })
         response = response.json()
-        print(response)
         if "queryText" in response["queryResult"]:
-            return (response["queryResult"]["queryText"], response["queryResult"]["intent"]['displayName'], response['queryResult']['fulfillmentText'])
+            return (response["queryResult"]["queryText"], response["queryResult"]["intent"]['displayName'], response['queryResult']['fulfillmentText'], response['queryResult']['parameters'])
         else:
             return None
     except HTTPError as e:

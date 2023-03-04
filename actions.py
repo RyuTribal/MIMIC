@@ -1,5 +1,5 @@
 import network
-import json
+import time
 import threading
 
 class ActionProcessor():
@@ -7,6 +7,8 @@ class ActionProcessor():
         self.conn = conn_obj
         self.tts = conn_obj.get_service("ALTextToSpeech")
         self.animation_player = conn_obj.get_service("ALAnimationPlayer")
+        self.tablet_service = conn_obj.get_service("ALTabletService")
+        self.tablet_service.enableWifi()
         self.audio_file_path = audio_file_path
 
     def process_action(self, talking_ev):
@@ -30,10 +32,25 @@ class ActionProcessor():
             say_thread = threading.Thread(target=self.tts.say, args=(dialogflow_resp[2],))
             animation_thread.start()
             say_thread.start()
+        elif(dialogflow_resp[1] == 'smalltalk.internet.google'):
+            animation_thread = threading.Thread(target=self.animation_player.runTag, args=("affirmative",))
+            say_thread = threading.Thread(target=self.tts.say, args=(dialogflow_resp[2],))
+            animation_thread.start()
+            say_thread.start()
+            self.open_tablet_and_google(dialogflow_resp[3]['any'])
         else:
             openai_resp = network.send_openai_recieve_response(prompt=prompt)
             say_thread = threading.Thread(target=self.tts.say, args=(openai_resp,))
             say_thread.start()
-
+        time.sleep(0.5)
         talking_ev.clear()
+
+
+
+    def open_tablet_and_google(self, query):
+        """
+        This function is just for demonstration
+        """
+        query = query.replace(" ", "+")
+        self.tablet_service.showWebview("https://www.google.com/search?q="+query)
             
