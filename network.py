@@ -35,47 +35,11 @@ PROJECT_ID = os.getenv("DIALOGFLOW_PROJECT")
 DIALOGFLOW_URL = "https://global-dialogflow.googleapis.com/v2/projects/"+PROJECT_ID+"/agent/sessions/-:detectIntent"
 
 
-def send_and_recieve_response(prompt):
-    """
+def send_openai_recieve_response(prompt):
+    """ 
     This function sends the prompt to the 
-    dialogflow api and recieves the response. 
-    If the reponse has a certain intent, that intent can then be used to program pepper
-    to perform further actions, if no intent is availible, the request is then kicked off to
-    openai instead.
+    openai api and recieves the response.
     """
-
-    # creds = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])[0]
-
-    # request = google.auth.transport.requests.Request()
-    # creds.refresh(request)
-
-    # audio_file_path = 'tmp_files/speech.wav'
-
-    # audio_file_bytes = open(audio_file_path, "rb").read()
-
-    # dialog_bot_query = {
-    #     "queryInput": {
-    #         "outputAudioConfig": {
-    #             "sampleRateHertz": 48000
-    #         }
-    #     },
-    #     "inputAudio": audio_file_bytes
-    # }
-
-    # dialog_bot_query = {
-    #     "queryInput": {
-    #         "text": {
-    #             "languageCode": "en",
-    #             "text": prompt
-    #         }
-    #     }
-    # }
-
-    # response = requests.post(DIALOGFLOW_URL, data=json.dumps(dialog_bot_query), headers={
-    #     "Authorization": "Bearer "+creds.token
-    # })
-
-    # return response.json()["queryResult"]["intent"]
 
 
     
@@ -86,9 +50,51 @@ def send_and_recieve_response(prompt):
     data["prompt"] = "Person:"+prompt+"\nPepper:"
 
     response = requests.post(OPEN_AI_URL, data=json.dumps(data), headers=OPEN_AI_HEADERS, verify=False)
-    return response
+    return response.json()["choices"][0]["text"]
+
+
+def send_dialogflow_recieve_response(prompt):
+    """
+    This function sends the prompt to the 
+    dialogflow api and recieves the response.
+    """
+
+    creds = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])[0]
+
+    request = google.auth.transport.requests.Request()
+    creds.refresh(request)
+
+    audio_file_path = 'tmp_files/speech.wav'
+
+    audio_file_bytes = open(audio_file_path, "rb").read()
+
+    dialog_bot_query = {
+        "queryInput": {
+            "outputAudioConfig": {
+                "sampleRateHertz": 48000
+            }
+        },
+        "inputAudio": audio_file_bytes
+    }
+
+    dialog_bot_query = {
+        "queryInput": {
+            "text": {
+                "languageCode": "en",
+                "text": prompt
+            }
+        }
+    }
+
+    response = requests.post(DIALOGFLOW_URL, data=json.dumps(dialog_bot_query), headers={
+        "Authorization": "Bearer "+creds.token
+    })
+
+    response = response.json()
+
+    return (response["queryResult"]["intent"]['displayName'], response['queryResult']['fulfillmentText'])
     
 
 if __name__ == "__main__":
-    resp = send_and_recieve_response("Hey")
+    resp = send_dialogflow_recieve_response("Hey")
     print(resp)
