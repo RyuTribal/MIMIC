@@ -89,12 +89,8 @@ class Listener():
             self.set_awareness(True)
 
             self.download_audio("speech.wav")
-            prompt = self.speech_to_text(audio_file="speech.wav")
-            if prompt:
-                print("[INFO]: Heard " + prompt)
-                action_obj = actions.ActionProcessor(conn_obj=self.conn, prompt=prompt)
-                action_obj.process_action()
-            self.recording_in_progress = False
+            action_obj = actions.ActionProcessor(conn_obj=self.conn, audio_file_path=os.path.join(tmp_path, "speech.wav"))
+            action_obj.process_action()
             time.sleep(1)
             
 

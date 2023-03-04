@@ -13,6 +13,8 @@ import google.auth
 import google.oauth2
 import google.auth.transport.requests
 import wave
+import base64
+from requests.exceptions import HTTPError
 
 
 OPEN_AI_URL = "https://api.openai.com/v1/completions"
@@ -53,11 +55,49 @@ def send_openai_recieve_response(prompt):
     return response.json()["choices"][0]["text"]
 
 
+def send_dialogflow_audio_recieve_response(audio_path):
+    """
+    This function take a path to an audio file instead,
+    sends it to dialogflow and waits for a response
+    """
+
+
+    creds = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])[0]
+
+    request = google.auth.transport.requests.Request()
+    creds.refresh(request)
+
+    audio_file_bytes = open(audio_path, "rb").read()
+
+    dialog_bot_query = {
+        "queryInput":{
+            "audioConfig":{
+                "audioEncoding": "AUDIO_ENCODING_LINEAR_16",
+                "sampleRateHertz": 48000,
+                "languageCode": "en"
+            }
+        },
+        "inputAudio": base64.b64encode(audio_file_bytes)
+        
+    }
+    try:
+        response = requests.post(DIALOGFLOW_URL, data=json.dumps(dialog_bot_query), headers={
+            "Authorization": "Bearer "+creds.token
+        })
+        response = response.json()
+        if "queryText" in response["queryResult"]:
+            return (response["queryResult"]["queryText"], response["queryResult"]["intent"]['displayName'], response['queryResult']['fulfillmentText'])
+        else:
+            return None
+    except HTTPError as e:
+        return e.response.text
+
 def send_dialogflow_recieve_response(prompt):
     """
     This function sends the prompt to the 
     dialogflow api and recieves the response.
     """
+
 
     creds = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])[0]
 
@@ -96,5 +136,5 @@ def send_dialogflow_recieve_response(prompt):
     
 
 if __name__ == "__main__":
-    resp = send_dialogflow_recieve_response("Hey")
+    resp = send_dialogflow_audio_recieve_response("tmp_files/speech.wav")
     print(resp)
