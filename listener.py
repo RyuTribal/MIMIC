@@ -4,6 +4,7 @@ and processing input audio to pepper.
 """
 
 
+import json
 import time
 import paramiko
 import os
@@ -14,6 +15,8 @@ import wave
 import network
 import threading
 import actions
+import random
+import logging
 
 
 tmp_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tmp_files")
@@ -45,12 +48,16 @@ class Listener():
         self.speech_recognition_engine = conn_obj.get_service("ALSpeechRecognition")
         self.speech_recognition_engine.pause(True)
         self.speech_recognition_engine.setLanguage("English")
+        print("[Availible languages]: " + ' '.join(self.speech_recognition_engine.getAvailableLanguages()))
+        self.word_spotted_answers = ["Yes?", "How can I help you?", "What's up?"]
+        self.is_answering = False
+        self.is_speaking = False
 
         # Not really necessary to put any words in here, this is just to make
         # the speech recongnition engine work. We use it only for the speech detection
         # We could force it to listen to a phrase before it starts listening
         # kind of like alexa.
-        vocab = ["yes", "no"]
+        vocab = ["pepper", "stop", "shut up", "cancel", "haram"]
         self.speech_recognition_engine.setVocabulary(vocab, True)
         self.framesCount=0
         self.recording_in_progress = False
@@ -60,6 +67,39 @@ class Listener():
         self.recognizer = speech_recognition.Recognizer()
         
     
+    
+    def wait_and_listen(self):
+        talking_ev = threading.Event()
+        while True:
+            if(self.memory_service.getData("ALSpeechRecognition/Status") == "SpeechDetected"):
+                spotted_word_arr = self.memory_service.getData("WordRecognized")
+                if(spotted_word_arr[-1] > 0.4):
+                    if 'pepper' in spotted_word_arr[0] and talking_ev.is_set() == False and self.memory_service.getData("ALTextToSpeech/TextStarted") != 1:
+                        talking_ev.set()
+                        recording_thread = threading.Thread(target=self.start_recording, args=(talking_ev,))
+                        recording_thread.start()
+                
+
+    def start_recording(self, talking_ev):
+        try:
+            print("[RECORDING THREAD]: Starting recording process")
+            self.audio_recorder.stopMicrophonesRecording()
+            self.set_awareness(False)
+            print("[RECORDING THREAD]: Robot is listening to you")
+            self.tts.say(random.choice(self.word_spotted_answers))
+            self.audio_recorder.startMicrophonesRecording("/home/nao/speech.wav", "wav", 48000, (0, 0, 1, 0))
+            time.sleep(1)
+            while self.is_speaking:
+                time.sleep(0.5)
+
+            self.audio_recorder.stopMicrophonesRecording()
+            self.set_awareness(True)
+            self.download_audio("speech.wav")
+            action_obj = actions.ActionProcessor(conn_obj=self.conn, audio_file_path=os.path.join(tmp_path, "speech.wav"))
+            action_obj.process_action(talking_ev=talking_ev)
+        except:
+            talking_ev.clear()
+
 
     def listen(self):
         while True:
@@ -153,7 +193,7 @@ class Listener():
         self.speech_recognition_engine.pause(False)
         self.speech_recognition_engine.subscribe(self.name)
         try:
-            self.listen()
+            self.wait_and_listen()
         except KeyboardInterrupt:
             self.stop_recognition()
 

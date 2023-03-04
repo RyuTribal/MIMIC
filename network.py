@@ -85,6 +85,7 @@ def send_dialogflow_audio_recieve_response(audio_path):
             "Authorization": "Bearer "+creds.token
         })
         response = response.json()
+        print(response)
         if "queryText" in response["queryResult"]:
             return (response["queryResult"]["queryText"], response["queryResult"]["intent"]['displayName'], response['queryResult']['fulfillmentText'])
         else:
