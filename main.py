@@ -22,9 +22,5 @@ if __name__ == "__main__":
 
     Listener.start_recognition()
 
-    Listener.stop_recognition()
-    # spoken_word = Listener.listen()
-    # print(spoken_word)
-
 
 
