@@ -96,8 +96,8 @@ class Listener():
             self.tts.say(random.choice(self.word_spotted_answers))
             self.audio_recorder.startMicrophonesRecording("/home/nao/speech.wav", "wav", 48000, (0, 0, 1, 0))
             time.sleep(1)
-            while self.is_speaking:
-                time.sleep(0.5)
+            while self.memory_service.getData("ALSpeechRecognition/Status") == "SpeechDetected":
+                time.sleep(1)
 
             self.audio_recorder.stopMicrophonesRecording()
             self.set_awareness(True)
